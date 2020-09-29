@@ -32,6 +32,8 @@
 <script>
 
 import Dashboard from '@/views/Dashboard.vue'
+// import { mapGetters } from 'vuex';
+
 
 export default {
   name: "SignInForm",
@@ -45,15 +47,35 @@ export default {
         password: "",
       },
     };
+
   },
+
+  // computed: {
+  //   ...mapGetters(['TokenId'])
+  // },
+ 
   methods: {
+      parseJwt (token)  {
+      console.log(token)
+   
+    let f =  JSON.parse(atob(token.split('.')[1]));
+    console.log(f)
+      return f;
+},
     onSubmit(evt) {
       evt.preventDefault();
            this.axios
         .post("http://localhost:8000/sign-in", this.form)
         .then((response) => {
-        this.$store.dispatch('token', response.data.token),
-          // console.log(response),
+        this.$store.dispatch('token', response.data.token);
+        let jwt = this.parseJwt(response.data.token);
+        // console.log(response.data.token)
+        
+        this.$store.dispatch('decodeToken', jwt.name)
+        this.$store.dispatch('decodeTokenId', jwt.id);
+        this.axios.get(`http://localhost:8000/get-contacts/${this.$store.state.tokenId}`)
+        .then((response) => {this.$store.dispatch('recContact', response.data)})
+          // console.log(jwt.name);
          // alert(JSON.stringify(this.form));
            this.$router.push('/dashboard')
           })
